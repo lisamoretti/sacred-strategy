@@ -50,8 +50,8 @@ const ALIGNMENT_QUESTIONS = [
 
 function Modal({ title, onClose, children }) {
   return (
-    <div style={{ position: "fixed", inset: 0, background: "rgba(26,26,24,0.7)", zIndex: 100, display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
-      <div style={{ background: "white", width: "100%", maxWidth: 540, padding: 36, position: "relative", border: `1px solid rgba(201,168,76,0.2)` }}>
+    <div style={{ position: "fixed", inset: 0, background: "rgba(26,26,24,0.7)", zIndex: 100, display: "flex", alignItems: "center", justifyContent: "center", padding: 24, overflowY: "auto" }}>
+      <div style={{ background: "white", width: "100%", maxWidth: 540, padding: 36, position: "relative", border: `1px solid rgba(201,168,76,0.2)`, margin: "auto", maxHeight: "90vh", overflowY: "auto" }}>
         <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2, background: `linear-gradient(90deg, transparent, ${GOLD}88, transparent)` }} />
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 28 }}>
           <div style={{ fontFamily: "Cormorant Garamond, Georgia, serif", fontSize: 22, fontWeight: 300, fontStyle: "italic" }}>{title}</div>
