@@ -361,28 +361,19 @@ export default function Dashboard() {
                   {latestActions.length===0 ? (
                     <div className="sans" style={{ fontSize:13,color:"#bbb",fontStyle:"italic" }}>No actions logged yet. Add standing commitments first, then log a check-in.</div>
                   ) : (
-                    <div style={{ display:"flex",flexDirection:"column",gap:6 }}>
+                    <div style={{ display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(220px,1fr))",gap:8 }}>
                       {latestActions.map((a,i) => {
                         const ok = Number(a.done)>=Number(a.committed);
+                        const partial = !ok && Number(a.done)>0;
                         return (
-                          <div key={i}
-                            onClick={async () => {
-                              if (!latestCheckin) return;
-                              const updated = latestCheckin.actions.map((act, j) =>
-                                j===i ? { ...act, done: ok ? 0 : Number(act.committed) } : act
-                              );
-                              await db.patch("checkins", latestCheckin.id, { actions: updated });
-                              await loadClientData(activeClientId);
-                            }}
-                            style={{ display:"flex",alignItems:"center",gap:14,padding:"12px 16px",background:ok?`${S}10`:"white",border:`1px solid ${ok?S:"rgba(201,168,76,0.15)"}`,borderRadius:2,cursor:"pointer",transition:"all 0.15s",userSelect:"none" }}>
-                            <div style={{ width:24,height:24,borderRadius:"50%",background:ok?S:"white",border:`2px solid ${ok?S:G}`,flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center",transition:"all 0.15s" }}>
-                              {ok && <span style={{ color:"white",fontSize:13,lineHeight:1 }}>✓</span>}
+                          <div key={i} style={{ display:"flex",alignItems:"center",gap:10,padding:"10px 14px",background:ok?`${S}12`:partial?`${G}08`:"#f9f7f3",border:`1px solid ${ok?S:partial?G:"rgba(201,168,76,0.12)"}`,borderRadius:2 }}>
+                            <div style={{ width:22,height:22,borderRadius:"50%",background:ok?S:partial?`${G}44`:"#e8e4dc",flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center" }}>
+                              {ok && <span style={{ color:"white",fontSize:11 }}>✓</span>}
                             </div>
-                            <div style={{ flex:1 }}>
-                              <div style={{ fontSize:15,fontStyle:"italic",color:ok?"#999":D,textDecoration:ok?"line-through":"none",transition:"all 0.15s" }}>{a.action}</div>
-                              <div className="sans" style={{ fontSize:10,color:ok?S:G,marginTop:2 }}>Target: {a.committed}{ok?" · Done":"" }</div>
+                            <div style={{ flex:1,minWidth:0 }}>
+                              <div style={{ fontSize:13,fontStyle:"italic",lineHeight:1.3,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap" }}>{a.action}</div>
+                              <div className="sans" style={{ fontSize:10,color:ok?S:partial?G:"#bbb",marginTop:2 }}>{a.done} / {a.committed} done</div>
                             </div>
-                            <div className="sans" style={{ fontSize:11,color:ok?S:"#ccc",letterSpacing:"0.06em" }}>{ok?"DONE":"tap to complete"}</div>
                           </div>
                         );
                       })}
