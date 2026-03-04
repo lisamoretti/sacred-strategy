@@ -323,7 +323,7 @@ export default function Dashboard() {
                 <button className="icon-btn" onClick={() => { setClientForm({name:client.name,offer:client.offer||"",strategy:client.strategy||"",revenue_goal:client.revenue_goal||"",start_date:client.start_date||"",strategy_commit_days:client.strategy_commit_days||"60"}); setModal("editClient"); }}>Edit Client</button>
               </div>
 
-              <div style={{ display:"grid",gridTemplateColumns:"1fr 1fr",gap:20,marginBottom:24 }}>
+              <div style={{ display:"grid",gridTemplateColumns:"1fr 1fr 1fr 1fr",gap:20,marginBottom:24 }}>
                 <div className="card" style={{ textAlign:"center" }}>
                   <div className="tag" style={{ marginBottom:16 }}>Alignment</div>
                   <div className="pulse-ring" style={{ width:72,height:72,margin:"0 auto 12px" }}>
@@ -349,19 +349,16 @@ export default function Dashboard() {
                   </div>
                 </div>
 
-                <div className="card" style={{ gridColumn: "span 2" }}>
-                  <div style={{ display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16 }}>
+                <div className="card">
+                  <div style={{ display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12 }}>
                     <div className="tag">Actions This Week</div>
-                    <div style={{ display:"flex",alignItems:"center",gap:12 }}>
-                      <div className="sans" style={{ fontSize:11,color:"#999" }}>{completedActions} of {latestActions.length} met</div>
-                      <div style={{ fontFamily:"Jost,sans-serif",fontSize:22,fontWeight:300,color:actionScore>=100?S:G }}>{actionScore}<span style={{ fontSize:13,color:"#bbb" }}>%</span></div>
-                      {latestCheckin && <button className="icon-btn" onClick={() => { setCheckinForm({flow_state:latestCheckin.flow_state||"flow",alignment_scores:latestCheckin.alignment_scores||[4,4,4,4,4],actions:latestCheckin.actions||[],reflection:latestCheckin.reflection||"",week_of:latestCheckin.week_of,editId:latestCheckin.id}); setNewOneOffAction({action:"",committed:""}); setModal("addCheckin"); }}>Update This Week</button>}
-                    </div>
+                    <div style={{ fontFamily:"Jost,sans-serif",fontSize:18,fontWeight:300,color:actionScore>=100?S:G }}>{actionScore}<span style={{ fontSize:11,color:"#bbb" }}>%</span></div>
                   </div>
+                  <div className="sans" style={{ fontSize:11,color:"#999",marginBottom:12 }}>{completedActions} of {latestActions.length} met</div>
                   {latestActions.length===0 ? (
-                    <div className="sans" style={{ fontSize:13,color:"#bbb",fontStyle:"italic" }}>No actions logged yet. Add standing commitments first, then log a check-in.</div>
+                    <div className="sans" style={{ fontSize:11,color:"#bbb",fontStyle:"italic",lineHeight:1.5 }}>No actions yet.<br/>Add standing commitments first.</div>
                   ) : (
-                    <div style={{ display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(220px,1fr))",gap:8 }}>
+                    <div style={{ display:"flex",flexDirection:"column",gap:6 }}>
                       {latestActions.map((a,i) => {
                         const ok = Number(a.done)>=Number(a.committed);
                         return (
@@ -374,17 +371,22 @@ export default function Dashboard() {
                               await db.patch("checkins", latestCheckin.id, { actions: updated });
                               await loadClientData(activeClientId);
                             }}
-                            style={{ display:"flex",alignItems:"center",gap:10,padding:"12px 14px",background:ok?`${S}10`:"#f9f7f3",border:`1px solid ${ok?S:"rgba(201,168,76,0.12)"}`,borderRadius:2,cursor:"pointer",transition:"all 0.15s",userSelect:"none" }}>
-                            <div style={{ width:22,height:22,borderRadius:"50%",background:ok?S:"white",border:`2px solid ${ok?S:G}`,flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center",transition:"all 0.15s" }}>
-                              {ok && <span style={{ color:"white",fontSize:11 }}>✓</span>}
+                            style={{ display:"flex",alignItems:"center",gap:8,padding:"8px 10px",background:ok?`${S}10`:"#f9f7f3",border:`1px solid ${ok?S:"rgba(201,168,76,0.12)"}`,borderRadius:2,cursor:"pointer",transition:"all 0.15s",userSelect:"none" }}>
+                            <div style={{ width:18,height:18,borderRadius:"50%",background:ok?S:"white",border:`2px solid ${ok?S:G}`,flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center",transition:"all 0.15s" }}>
+                              {ok && <span style={{ color:"white",fontSize:9 }}>✓</span>}
                             </div>
                             <div style={{ flex:1,minWidth:0 }}>
-                              <div style={{ fontSize:13,fontStyle:"italic",lineHeight:1.3,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",color:ok?"#aaa":D,textDecoration:ok?"line-through":"none",transition:"all 0.15s" }}>{a.action}</div>
-                              <div className="sans" style={{ fontSize:10,color:ok?S:G,marginTop:2 }}>{ok?"Done":"Target: "+a.committed}</div>
+                              <div style={{ fontSize:12,fontStyle:"italic",lineHeight:1.3,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",color:ok?"#aaa":D,textDecoration:ok?"line-through":"none" }}>{a.action}</div>
                             </div>
+                            <div className="sans" style={{ fontSize:9,color:ok?S:"#ccc",flexShrink:0 }}>{ok?"✓":a.committed}</div>
                           </div>
                         );
                       })}
+                    </div>
+                  )}
+                  {latestCheckin && (
+                    <div style={{ marginTop:10,textAlign:"right" }}>
+                      <button className="icon-btn" style={{ fontSize:9,padding:"4px 10px" }} onClick={() => { setCheckinForm({flow_state:latestCheckin.flow_state||"flow",alignment_scores:latestCheckin.alignment_scores||[4,4,4,4,4],actions:latestCheckin.actions||[],reflection:latestCheckin.reflection||"",week_of:latestCheckin.week_of,editId:latestCheckin.id}); setNewOneOffAction({action:"",committed:""}); setModal("addCheckin"); }}>Edit</button>
                     </div>
                   )}
                 </div>
