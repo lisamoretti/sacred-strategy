@@ -97,7 +97,7 @@ export default function Dashboard() {
 
   const [clientForm, setClientForm] = useState({ name: "", offer: "", strategy: "", revenue_goal: "", start_date: "", strategy_commit_days: "60" });
   const [revenueForm, setRevenueForm] = useState({ month: "", amount: "" });
-  const [checkinForm, setCheckinForm] = useState({ flow_state: "flow", alignment_scores: [4,4,4,4,4], actions: [], reflection: "", week_of: new Date().toISOString().slice(0,10) });
+  const [checkinForm, setCheckinForm] = useState({ flow_state: "flow", alignment_scores: [4,4,4,4,4], actions: [], reflection: "", week_of: new Date().toISOString().slice(0,10), editId: null });
   const [directiveForm, setDirectiveForm] = useState("");
   const [strategyForm, setStrategyForm] = useState({ strategy: "", strategy_commit_days: "60", start_date: "" });
   const [indicatorsForm, setIndicatorsForm] = useState([]);
@@ -189,7 +189,7 @@ export default function Dashboard() {
 
   const openAddCheckin = () => {
     const preloaded = standingActions.map(sa => ({ action: sa.action, committed: sa.committed, done: 0, standing: true }));
-    setCheckinForm({ flow_state: "flow", alignment_scores: [4,4,4,4,4], actions: preloaded, reflection: "", week_of: new Date().toISOString().slice(0,10) });
+    setCheckinForm({ flow_state: "flow", alignment_scores: [4,4,4,4,4], actions: preloaded, reflection: "", week_of: new Date().toISOString().slice(0,10), editId: null });
     setNewOneOffAction({ action: "", committed: "" });
     setModal("addCheckin");
   };
@@ -202,7 +202,12 @@ export default function Dashboard() {
 
   const saveCheckin = async () => {
     setSaving(true);
-    await db.post("checkins", { client_id: activeClientId, week_of: checkinForm.week_of, flow_state: checkinForm.flow_state, alignment_scores: checkinForm.alignment_scores, actions: checkinForm.actions, reflection: checkinForm.reflection });
+    const payload = { client_id: activeClientId, week_of: checkinForm.week_of, flow_state: checkinForm.flow_state, alignment_scores: checkinForm.alignment_scores, actions: checkinForm.actions, reflection: checkinForm.reflection };
+    if (checkinForm.editId) {
+      await db.patch("checkins", checkinForm.editId, payload);
+    } else {
+      await db.post("checkins", payload);
+    }
     await loadClientData(activeClientId);
     setSaving(false); setModal(null);
   };
@@ -318,7 +323,7 @@ export default function Dashboard() {
                 <button className="icon-btn" onClick={() => { setClientForm({name:client.name,offer:client.offer||"",strategy:client.strategy||"",revenue_goal:client.revenue_goal||"",start_date:client.start_date||"",strategy_commit_days:client.strategy_commit_days||"60"}); setModal("editClient"); }}>Edit Client</button>
               </div>
 
-              <div style={{ display:"grid",gridTemplateColumns:"1fr 1fr 1fr 1fr",gap:20,marginBottom:24 }}>
+              <div style={{ display:"grid",gridTemplateColumns:"1fr 1fr",gap:20,marginBottom:24 }}>
                 <div className="card" style={{ textAlign:"center" }}>
                   <div className="tag" style={{ marginBottom:16 }}>Alignment</div>
                   <div className="pulse-ring" style={{ width:72,height:72,margin:"0 auto 12px" }}>
@@ -344,19 +349,36 @@ export default function Dashboard() {
                   </div>
                 </div>
 
-                <div className="card">
-                  <div className="tag" style={{ marginBottom:12 }}>Actions This Week</div>
-                  <div style={{ fontSize:34,fontWeight:300,letterSpacing:"-0.02em",lineHeight:1 }}>{actionScore}<span style={{ fontSize:16,color:"#bbb" }}>%</span></div>
-                  <div className="sans" style={{ fontSize:12,color:"#999",marginTop:8 }}>{completedActions} of {latestActions.length} met</div>
-                  <div style={{ marginTop:16,display:"flex",gap:5,flexWrap:"wrap" }}>
-                    {latestActions.length===0 ? <div className="sans" style={{ fontSize:10,color:"#bbb" }}>No actions logged yet</div>
-                      : latestActions.map((a,i) => (
-                        <div key={i} title={a.action} style={{ flex:"1 1 24px",minWidth:24,height:28,borderRadius:2,background:Number(a.done)>=Number(a.committed)?S:Number(a.done)>0?`${G}55`:"#e8e4dc",display:"flex",alignItems:"center",justifyContent:"center" }}>
-                          {Number(a.done)>=Number(a.committed) && <span style={{ color:"white",fontSize:11 }}>✓</span>}
-                        </div>
-                      ))
-                    }
+                <div className="card" style={{ gridColumn: "span 2" }}>
+                  <div style={{ display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16 }}>
+                    <div className="tag">Actions This Week</div>
+                    <div style={{ display:"flex",alignItems:"center",gap:12 }}>
+                      <div className="sans" style={{ fontSize:11,color:"#999" }}>{completedActions} of {latestActions.length} met</div>
+                      <div style={{ fontFamily:"Jost,sans-serif",fontSize:22,fontWeight:300,color:actionScore>=100?S:G }}>{actionScore}<span style={{ fontSize:13,color:"#bbb" }}>%</span></div>
+                      {latestCheckin && <button className="icon-btn" onClick={() => { setCheckinForm({flow_state:latestCheckin.flow_state||"flow",alignment_scores:latestCheckin.alignment_scores||[4,4,4,4,4],actions:latestCheckin.actions||[],reflection:latestCheckin.reflection||"",week_of:latestCheckin.week_of,editId:latestCheckin.id}); setNewOneOffAction({action:"",committed:""}); setModal("addCheckin"); }}>Update This Week</button>}
+                    </div>
                   </div>
+                  {latestActions.length===0 ? (
+                    <div className="sans" style={{ fontSize:13,color:"#bbb",fontStyle:"italic" }}>No actions logged yet. Add standing commitments first, then log a check-in.</div>
+                  ) : (
+                    <div style={{ display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(220px,1fr))",gap:8 }}>
+                      {latestActions.map((a,i) => {
+                        const ok = Number(a.done)>=Number(a.committed);
+                        const partial = !ok && Number(a.done)>0;
+                        return (
+                          <div key={i} style={{ display:"flex",alignItems:"center",gap:10,padding:"10px 14px",background:ok?`${S}12`:partial?`${G}08`:"#f9f7f3",border:`1px solid ${ok?S:partial?G:"rgba(201,168,76,0.12)"}`,borderRadius:2 }}>
+                            <div style={{ width:22,height:22,borderRadius:"50%",background:ok?S:partial?`${G}44`:"#e8e4dc",flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center" }}>
+                              {ok && <span style={{ color:"white",fontSize:11 }}>✓</span>}
+                            </div>
+                            <div style={{ flex:1,minWidth:0 }}>
+                              <div style={{ fontSize:13,fontStyle:"italic",lineHeight:1.3,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap" }}>{a.action}</div>
+                              <div className="sans" style={{ fontSize:10,color:ok?S:partial?G:"#bbb",marginTop:2 }}>{a.done} / {a.committed} done</div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
 
                 <div className="card" style={{ textAlign:"center" }}>
@@ -626,7 +648,7 @@ export default function Dashboard() {
       )}
 
       {modal==="addCheckin" && (
-        <Modal title="New Weekly Check-In" onClose={() => setModal(null)}>
+        <Modal title={checkinForm.editId ? "Update Check-In" : "New Weekly Check-In"} onClose={() => setModal(null)}>
           <Input label="Week of" type="date" value={checkinForm.week_of} onChange={v => setCheckinForm(f=>({...f,week_of:v}))} />
           <div style={{ marginBottom:20 }}>
             <div className="tag" style={{ marginBottom:10 }}>Energy State</div>
@@ -695,7 +717,7 @@ export default function Dashboard() {
               style={{ width:"100%",fontFamily:"Cormorant Garamond,serif",fontSize:15,color:D,background:W,border:"1px solid rgba(201,168,76,0.25)",padding:"10px 14px",outline:"none",resize:"none",lineHeight:1.7 }} />
           </div>
           <div style={{ display:"flex",justifyContent:"flex-end" }}>
-            <SaveBtn onClick={saveCheckin} loading={saving} label="Save Check-In" />
+            <SaveBtn onClick={saveCheckin} loading={saving} label={checkinForm.editId ? "Update Check-In" : "Save Check-In"} />
           </div>
         </Modal>
       )}
