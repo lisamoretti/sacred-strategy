@@ -401,7 +401,7 @@ export default function Dashboard() {
                 </div>
               </div>
 
-              <div style={{ display:"grid",gridTemplateColumns:"1.3fr 1fr",gap:20,marginBottom:20 }}>
+              <div style={{ marginBottom:20 }}>
                 <div className="card">
                   <div style={{ display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:20 }}>
                     <div className="tag">Revenue Momentum</div>
@@ -425,34 +425,7 @@ export default function Dashboard() {
                   </div>
                 </div>
 
-                <div className="card">
-                  <div style={{ display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16 }}>
-                    <div className="tag">Standing Commitments</div>
-                    <button className="icon-btn" onClick={() => setModal("manageStanding")}>Manage</button>
-                  </div>
-                  {standingActions.length===0 ? (
-                    <div className="sans" style={{ fontSize:13,color:"#bbb",fontStyle:"italic",lineHeight:1.7 }}>No standing commitments yet.<br/>Click Manage to add them.</div>
-                  ) : standingActions.map(sa => {
-                    const match = latestActions.find(a => a.action===sa.action);
-                    const done = match ? Number(match.done) : null;
-                    const complete = done!==null && done>=Number(sa.committed);
-                    return (
-                      <div key={sa.id} style={{ display:"flex",alignItems:"center",gap:10,padding:"10px 0",borderBottom:"1px solid rgba(201,168,76,0.08)" }}>
-                        <div style={{ width:20,height:20,borderRadius:"50%",background:complete?S:done!==null&&done>0?`${G}44`:"#e8e4dc",border:`1px solid ${complete?S:"rgba(201,168,76,0.2)"}`,flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center" }}>
-                          {complete && <span style={{ color:"white",fontSize:9 }}>✓</span>}
-                        </div>
-                        <div style={{ flex:1 }}>
-                          <div style={{ fontSize:14,fontStyle:"italic",lineHeight:1.4 }}>{sa.action}</div>
-                          <div className="sans" style={{ fontSize:9,color:"#bbb",marginTop:2 }}>
-                            Target: {sa.committed}
-                            {done!==null && <span style={{ color:complete?S:G,marginLeft:8 }}>Done: {done}</span>}
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                  {latestCheckin && <div className="sans" style={{ fontSize:9,color:"#bbb",marginTop:12,letterSpacing:"0.06em" }}>WEEK OF {latestCheckin.week_of}</div>}
-                </div>
+
               </div>
 
               <div className="card">
